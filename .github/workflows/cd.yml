@@ -8,6 +8,10 @@ jobs:
         name: Deploy
         runs-on: ubuntu-latest
 
+        permissions:
+            contents: read
+            id-token: write
+
         steps:
             - name: Check out code
               uses: actions/checkout@v6
@@ -19,3 +23,15 @@ jobs:
 
             - name: Build
               run: scripts/buildprod.sh
+
+            - id: auth
+              uses: google-github-actions/auth@v3
+              with:
+                  workload_identity_provider: "projects/281466992679/locations/global/workloadIdentityPools/github/providers/my-repo"
+                  service_account: "cloud-run-deployer@sonorous-antler-515219-q5.iam.gserviceaccount.com"
+
+            - name: Set up Cloud SDK
+              uses: google-github-actions/setup-gcloud@v3
+
+            - name: Build and push Docker image
+              run: gcloud builds submit --tag us-central1-docker.pkg.dev/sonorous-antler-515219-q5/notely-ar-repo/notely:latest .
